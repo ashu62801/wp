@@ -1,0 +1,86 @@
+// crausel post
+
+function create_crausel_post_type(){
+    register_post_type('crausel',
+        array(
+
+            'labels' => array(
+
+                'name' => ('Crausel'),
+                'singular_name' => ('Crausel'),
+            ),
+
+            'public' => true,
+            'supports' => array('title', 'thumbnail', 'excerpt', 'editor')
+        )
+);
+};
+
+add_action('init', 'create_crausel_post_type');
+
+
+
+function my_crausel() {
+    $args = array(
+        'post_type' => 'crausel',
+        'posts_per_page' => 5, // Fix 'post_per_page' to 'posts_per_page'
+    );
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) {
+        $output = '<div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">';
+
+        // Generate carousel indicators
+        $output .= '<div class="carousel-indicators">';
+        $indicator_count = 0;
+        while ($query->have_posts()) {
+            $query->the_post();
+            $active_class = ($indicator_count == 0) ? 'active' : '';
+            $output .= '<button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="' . $indicator_count . '" class="' . $active_class . '" aria-current="true" aria-label="Slide ' . ($indicator_count + 1) . '"></button>';
+            $indicator_count++;
+        }
+        $output .= '</div>';
+
+        // Reset post data to loop through slides
+        $query->rewind_posts();
+
+        // Generate carousel items
+        $output .= '<div class="carousel-inner">';
+        $slide_count = 0;
+        while ($query->have_posts()) {
+            $query->the_post();
+            $active_class = ($slide_count == 0) ? 'active' : '';
+            $output .= '<div class="carousel-item ' . $active_class . '">';
+            $output .= get_the_post_thumbnail(get_the_ID(), 'large', array('class' => 'd-block w-100', 'height' => '400px'));
+            $output .= '<div class="carousel-caption d-none d-md-block">';
+            $output .= '<h5>' . get_the_title() . '</h5>';
+            $output .= '<p>' . get_the_excerpt() . '</p>';
+            $output .= '</div>';
+            $output .= '</div>';
+            $slide_count++;
+        }
+        $output .= '</div>';
+
+        // Add carousel controls
+        $output .= '
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>';
+
+        $output .= '</div>';
+
+        wp_reset_postdata(); 
+    } else {
+        $output = '<p>No Crausel found.</p>';
+    }
+
+    return $output;
+}
+
+add_shortcode('crausel', 'my_crausel');
